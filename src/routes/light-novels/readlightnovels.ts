@@ -2,21 +2,24 @@ import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from '
 import { LIGHT_NOVELS } from '@consumet/extensions';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
-  const readlightnovels = new LIGHT_NOVELS.ReadLightNovels();
+  const animedailynovels = new LIGHT_NOVELS.AnimeDailyNovels();
+  
 
   fastify.get('/', (_, rp) => {
     rp.status(200).send({
       intro:
-        "Welcome to the readlightnovels provider: check out the provider's website @ https://readlightnovels.net/",
+        "Welcome to the animedailynovels provider: check out the provider's website @ https://animedailynovels.net/",
       routes: ['/:query', '/info', '/read'],
-      documentation: 'https://docs.consumet.org/#tag/readlightnovels',
+      documentation: 'https://docs.consumet.org/#tag/animedailynovels',
     });
   });
 
   fastify.get('/:query', async (request: FastifyRequest, reply: FastifyReply) => {
     const query = (request.params as { query: string }).query;
-
-    const res = await readlightnovels.search(query);
+    console.log(request.query);
+    console.log(query);
+    
+    const res = await animedailynovels.search(query);
 
     reply.status(200).send(res);
   });
@@ -32,8 +35,8 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     }
 
     try {
-      const res = await readlightnovels
-        .fetchLightNovelInfo(id, chapterPage)
+      const res = await animedailynovels
+        .fetchLightNovelInfo(id, chapterPage ?? 1)
         .catch((err) => reply.status(404).send({ message: err }));
 
       reply.status(200).send(res);
@@ -54,11 +57,38 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     }
 
     try {
-      const res = await readlightnovels
+      const res = await animedailynovels
         .fetchChapterContent(chapterId)
         .catch((err) => reply.status(404).send(err));
+        return reply.status(200).send(res);
+    } catch (err) {
+      reply
+        .status(500)
+        .send({ message: 'Something went wrong. Please try again later.' });
+    }
+  });
+  fastify.get('/recenly-updated', async (request: FastifyRequest, reply: FastifyReply) => {
+    const chapterId = (request.query as { chapterId: string }).chapterId;
 
-      reply.status(200).send(res);
+    try {
+      const res = await animedailynovels
+        .fetchChapterContent(chapterId)
+        .catch((err) => reply.status(404).send(err));
+        return reply.status(200).send(res);
+    } catch (err) {
+      reply
+        .status(500)
+        .send({ message: 'Something went wrong. Please try again later.' });
+    }
+  });
+  fastify.get('/genres', async (request: FastifyRequest, reply: FastifyReply) => {
+    const chapterId = (request.query as { chapterId: string }).chapterId;
+
+    try {
+      const res = await animedailynovels
+        .fetchGenreList(chapterId)
+        .catch((err) => reply.status(404).send(err));
+        return reply.status(200).send(res);
     } catch (err) {
       reply
         .status(500)
