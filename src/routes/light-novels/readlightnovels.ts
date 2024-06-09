@@ -14,7 +14,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     });
   });
 
-  fastify.get('/:query', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/search', async (request: FastifyRequest, reply: FastifyReply) => {
     const query = (request.params as { query: string }).query;
     console.log(request.query);
     console.log(query);
@@ -67,12 +67,12 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
         .send({ message: 'Something went wrong. Please try again later.' });
     }
   });
-  fastify.get('/recenly-updated', async (request: FastifyRequest, reply: FastifyReply) => {
-    const chapterId = (request.query as { chapterId: string }).chapterId;
+  fastify.get('/novel-list/:routename', async (request: FastifyRequest, reply: FastifyReply) => {
+    const routeName = (request.params as { routename: string }).routename;
 
     try {
       const res = await animedailynovels
-        .fetchChapterContent(chapterId)
+        .fetchNovelList(routeName)
         .catch((err) => reply.status(404).send(err));
         return reply.status(200).send(res);
     } catch (err) {
