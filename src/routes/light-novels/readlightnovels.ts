@@ -36,7 +36,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
 
     try {
       const res = await animedailynovels
-        .fetchLightNovelInfo(id, chapterPage ?? 1)
+        .fetchLightNovelInfo(id, chapterPage)
         .catch((err) => reply.status(404).send({ message: err }));
 
       reply.status(200).send(res);
@@ -78,7 +78,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
     } catch (err) {
       reply
         .status(500)
-        .send({ message: 'Something went wrong. Please try again later.' });
+        .send({ message: 'Something went wrong. Please try later.' });
     }
   });
   fastify.get('/genres', async (request: FastifyRequest, reply: FastifyReply) => {
