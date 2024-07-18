@@ -15,11 +15,11 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   });
 
   fastify.get('/search', async (request: FastifyRequest, reply: FastifyReply) => {
-    const query = (request.params as { query: string }).query;
-    console.log(request.query);
-    console.log(query);
+    const query = (request.query as { query: string , page: number});
+    const searchText = query.query;
+    const pageNumber = query.page;
     
-    const res = await animedailynovels.search(query);
+    const res = await animedailynovels.search(searchText, pageNumber);
 
     reply.status(200).send(res);
   });
@@ -67,12 +67,14 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
         .send({ message: 'Something went wrong. Please try again later.' });
     }
   });
-  fastify.get('/novel-list/:routename', async (request: FastifyRequest, reply: FastifyReply) => {
-    const routeName = (request.params as { routename: string }).routename;
+  fastify.get('/novel-list/:routename/page/:page', async (request: FastifyRequest, reply: FastifyReply) => {
+    const params = (request.params as { routename: string, page:number });
+    const routeName = params.routename
+    const pageNumber = params.page ?? 1;
 
     try {
       const res = await animedailynovels
-        .fetchNovelList(routeName)
+        .fetchNovelList(routeName,pageNumber)
         .catch((err) => reply.status(404).send(err));
         return reply.status(200).send(res);
     } catch (err) {
