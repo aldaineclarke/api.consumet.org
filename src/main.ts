@@ -14,7 +14,8 @@ import meta from './routes/meta';
 import news from './routes/news';
 import chalk from 'chalk';
 import Utils from './utils';
-
+import serviceAccount from '../serviceaccountkey.json';
+import mongoose from 'mongoose';
 export const redis =
   process.env.REDIS_HOST &&
   new Redis({
@@ -28,9 +29,13 @@ const fastify = Fastify({
   logger: true,
 });
 export const tmdbApi = process.env.TMDB_KEY && process.env.TMDB_KEY;
+export const mongoDBURI = process.env.MONGO_DB_URI && process.env.MONGO_DB_URI;
 (async () => {
   const PORT = Number(process.env.PORT) || 3000;
-
+  
+  await mongoose.connect(process.env.MONGO_DB_URI ?? "").then(()=>{
+    console.log("DB connected Successfully")
+  })
   await fastify.register(FastifyCors, {
     origin: '*',
     methods: 'GET',

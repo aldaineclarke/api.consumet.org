@@ -1,9 +1,10 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { LIGHT_NOVELS } from '@consumet/extensions';
-
+import { ILightNovelInfo, LIGHT_NOVELS } from '@consumet/extensions';
+import NovelModel from '../../schema/novel_schema';
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   const animedailynovels = new LIGHT_NOVELS.AnimeDailyNovels();
-  
+  const db = getFirestore();
+  const novelCollection = db.collection('novels')
 
   fastify.get('/', (_, rp) => {
     rp.status(200).send({
@@ -33,13 +34,37 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
         message: 'id is required',
       });
     }
-
+    
     try {
-      const res = await animedailynovels
-        .fetchLightNovelInfo(id, chapterPage)
-        .catch((err) => reply.status(404).send({ message: err }));
+      // Find the novel with this novel ID that was passed in.
+      let novelItem = await NovelModel.findOne({'id': id});
+      // if the novelList is empty then we need to fetch it from the API.
+      if(!novelItem){
+        const res = await animedailynovels
+          .fetchLightNovelInfo(id, chapterPage)
+          .catch((err) => reply.status(404).send({ message: err }));
 
-      reply.status(200).send(res);
+          reply.status(200).send(res);
+          // I want when the total length of the chapters is greater than 300 then save it to the database to make it easier to retrieve.
+        if((res.chapters?.length ?? 0 > 300) && (res.chapters?.length ?? 0 < 4000)){
+          await new NovelModel(res).save();
+        }
+      
+      }else{
+        // If the item is in our buffer db then we can just return that instead.
+        let currentNovel = novelItem;
+        reply.status(200).send(currentNovel);
+
+        // Check to see if the status of the novel is completed. 
+        // If it is not then ensure that we fetch to update the database with the most updated info.
+        if(currentNovel.status !== "Completed"){
+          const res = await animedailynovels
+          .fetchLightNovelInfo(id, chapterPage)
+          .catch((err) => reply.status(404).send({ message: err }));
+          await currentNovel.updateOne(res);
+        }
+      }
+
     } catch (err) {
       reply
         .status(500)
