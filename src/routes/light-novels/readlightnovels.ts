@@ -3,8 +3,6 @@ import { ILightNovelInfo, LIGHT_NOVELS } from '@consumet/extensions';
 import NovelModel from '../../schema/novel_schema';
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   const animedailynovels = new LIGHT_NOVELS.AnimeDailyNovels();
-  const db = getFirestore();
-  const novelCollection = db.collection('novels')
 
   fastify.get('/', (_, rp) => {
     rp.status(200).send({
