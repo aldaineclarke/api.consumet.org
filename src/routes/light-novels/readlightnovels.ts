@@ -73,6 +73,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       }
 
     } catch (err) {
+      console.log("There was an error: ", err);
       reply
         .status(500)
         .send({ message: 'Something went wrong. Please try again later.' });
