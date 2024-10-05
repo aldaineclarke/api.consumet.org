@@ -14,7 +14,6 @@ import meta from './routes/meta';
 import news from './routes/news';
 import chalk from 'chalk';
 import Utils from './utils';
-import serviceAccount from '../serviceaccountkey.json';
 import mongoose from 'mongoose';
 export const redis =
   process.env.REDIS_HOST &&
