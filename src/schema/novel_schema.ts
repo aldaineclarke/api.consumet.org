@@ -67,7 +67,6 @@ const novelSchema = new Schema<Novel>({
   },
   novelId: {
     type: String,
-    required: true
   },
   views: {
     type: Number,
