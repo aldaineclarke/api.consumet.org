@@ -38,30 +38,38 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       let novelItem = await NovelModel.findOne({'id': id});
       // if the novelList is empty then we need to fetch it from the API.
       if(!novelItem){
-        const res = await animedailynovels
-          .fetchLightNovelInfo(id, chapterPage)
-          .catch((err) => reply.status(404).send({ message: err }));
+        const res = await animedailynovels.fetchLightNovelInfo(id, chapterPage);
 
-           // I want when the total length of the chapters is greater than 300 then save it to the database to make it easier to retrieve.
-           if((res.chapters?.length ?? 0 > 300) && (res.chapters?.length ?? 0 < 4000)){
-            await new NovelModel(res).save(); // async. 
-          }
-          return reply.status(200).send(res);
-         
+        // Check if the total number of chapters is within the valid range.
+        const chapterCount = res.chapters?.length ?? 0;
+        if (chapterCount > 300) {
+          // Save the novel in the database asynchronously
+          new NovelModel(res).save()
+            .then(() => console.log("Novel saved successfully"))
+            .catch((err) => console.error("Error saving novel:", err));
+        }
+        return reply.status(200).send(res);
+
       
       }else{
         // If the item is in our buffer db then we can just return that instead.
         let currentNovel = novelItem;
-        
+        reply.status(200).send(currentNovel);
         // Check to see if the status of the novel is completed. 
         // If it is not then ensure that we fetch to update the database with the most updated info.
-        if(currentNovel.status !== "Completed"){
-          const res = await animedailynovels
-          .fetchLightNovelInfo(id, chapterPage)
-          .catch((err) => reply.status(404).send({ message: err }));
-          await currentNovel.updateOne(res);
+        if (currentNovel?.status !== "Completed") {
+          // Fetch novel data but do not await the result
+          animedailynovels
+            .fetchLightNovelInfo(id, chapterPage)
+            .then(async (res) => {
+              // Update the current novel in the background
+              await currentNovel?.updateOne(res);
+            })
+            .catch((err) => console.error("Error updating novel:", err));
         }
-        return reply.status(200).send(currentNovel);
+        
+        // Return response immediately without waiting for the update
+        return;
       }
 
     } catch (err) {
