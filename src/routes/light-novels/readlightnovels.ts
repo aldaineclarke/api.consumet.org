@@ -42,17 +42,17 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
           .fetchLightNovelInfo(id, chapterPage)
           .catch((err) => reply.status(404).send({ message: err }));
 
-          reply.status(200).send(res);
-          // I want when the total length of the chapters is greater than 300 then save it to the database to make it easier to retrieve.
-        if((res.chapters?.length ?? 0 > 300) && (res.chapters?.length ?? 0 < 4000)){
-          await new NovelModel(res).save();
-        }
+           // I want when the total length of the chapters is greater than 300 then save it to the database to make it easier to retrieve.
+           if((res.chapters?.length ?? 0 > 300) && (res.chapters?.length ?? 0 < 4000)){
+            await new NovelModel(res).save(); // async. 
+          }
+          return reply.status(200).send(res);
+         
       
       }else{
         // If the item is in our buffer db then we can just return that instead.
         let currentNovel = novelItem;
-        reply.status(200).send(currentNovel);
-
+        
         // Check to see if the status of the novel is completed. 
         // If it is not then ensure that we fetch to update the database with the most updated info.
         if(currentNovel.status !== "Completed"){
@@ -61,6 +61,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
           .catch((err) => reply.status(404).send({ message: err }));
           await currentNovel.updateOne(res);
         }
+        return reply.status(200).send(currentNovel);
       }
 
     } catch (err) {
